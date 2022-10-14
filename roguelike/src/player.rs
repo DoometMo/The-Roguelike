@@ -19,15 +19,27 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
 }
 
 pub fn player_input(gs: &mut State, ctx: &mut Rltk) {
-    // Player controls
+    // Player movement
     match ctx.key {
-        None => {} // If player presses nothing: do nothing
-        Some(key) => match key { // if player pushes something: do it
-            VirtualKeyCode::Left => try_move_player(-1, 0, &mut gs.ecs),
-            VirtualKeyCode::Right => try_move_player(1, 0, &mut gs.ecs),
-            VirtualKeyCode::Up => try_move_player(0, -1, &mut gs.ecs),
-            VirtualKeyCode::Down => try_move_player(0, 1, &mut gs.ecs),
-            _ => {} // if player doesnt press defined keys: do nothing
+        None => {} // Nothing happened
+        Some(key) => match key {
+            VirtualKeyCode::Left |
+            VirtualKeyCode::Numpad4 |
+            VirtualKeyCode::H => try_move_player(-1, 0, &mut gs.ecs),
+
+            VirtualKeyCode::Right |
+            VirtualKeyCode::Numpad6 |
+            VirtualKeyCode::L => try_move_player(1, 0, &mut gs.ecs),
+
+            VirtualKeyCode::Up |
+            VirtualKeyCode::Numpad8 |
+            VirtualKeyCode::K => try_move_player(0, -1, &mut gs.ecs),
+
+            VirtualKeyCode::Down |
+            VirtualKeyCode::Numpad2 |
+            VirtualKeyCode::J => try_move_player(0, 1, &mut gs.ecs),
+
+            _ => {}
         },
     }
 }
