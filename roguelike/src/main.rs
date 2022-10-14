@@ -16,23 +16,69 @@ struct Renderable {
     bg: RGB,
 }
 
-#[derive(Component)]
-struct LeftMover {}
-
 #[derive(Component, Debug)]
 struct Player {}
+
+// Types of tiles
+#[derive(PartialEq, Copy, Clone)]
+enum TileType {
+    Wall, Floor
+}
 
 struct State {
     ecs: World
 }
+
+// Guarantees one tile per location
+pub fn xy_idx(x: i32, y: i32) -> usize {
+    (y as usize * 80) + x as usize
+}
+
+// Map constructor
+fn new_map() -> Vec<TileType> {
+    // "Let me change the new variable and call it a 'map' = and make it out of the TileTypes FLOOR and a size of 80*50 (4000) tiles"
+    let mut map = vec![TileType::Floor; 80*50];
+
+    // (Horizontal) Make the boundaries of the application window (map) into walls
+    for x in 0..80 {
+        map[xy_idx(x, 0)] = TileType::Wall;
+        map[xy_idx(x, 49)] = TileType::Wall;
+    }
+    //(Vertical) Same as above
+    for y in 0..50 {
+        map[xy_idx(0, y)] = TileType::Wall;
+        map[xy_idx(79, y)] = TileType::Wall;
+    }
+
+    // Randomly place a bunch of walls.
+    // "Let me change the new variable and call it 'rng' = we are using the dice roller from the rltk and assigning it to the 'rng' variable"
+    let mut rng = rltk::RandomNumberGenerator::new();
+
+    // Rolling the imaginary di for values
+    for _i in 0..400 { // sets 400 random walls in the map
+        let x = rng.roll_dice(1, 79);
+        let y = rng.roll_dice(1, 49);
+        let idx = xy_idx(x, y); // sets this random value to 'idx'
+        if idx != xy_idx(40, 25) { // makes sure that 'idx' isnt in the exact middle so Player doesn't start in a Wall
+            map[idx] = TileType::Wall;
+        }
+    }
+
+    map
+}
+
 // Player movement
 fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();
     let mut players = ecs.write_storage::<Player>();
+    let map = ecs.fetch::<Vec<TileType>>();
 
     for (_player, pos) in (&mut players, &mut positions).join() {
-        pos.x = min(79 , max(0, pos.x + delta_x));
-        pos.y = min(49, max(0, pos.y + delta_y));
+        let destination_idx = xy_idx(pos.x + delta_x, pos.y + delta_y); //  if it is NOT a Wall: Player can move there
+        if map[destination_idx] != TileType::Wall { // if it is Wall: Player can NOT move there
+            pos.x = min(79 , max(0, pos.x + delta_x));
+            pos.y = min(49, max(0, pos.y + delta_y));
+        }
     }
 }
 
@@ -49,14 +95,41 @@ fn player_input(gs: &mut State, ctx: &mut Rltk) {
         },
     }
 }
+// Drawing the map on the screen
+fn draw_map(map: &[TileType], ctx : &mut Rltk) {
+    let mut y = 0;
+    let mut x = 0;
+    for tile in map.iter() {
+        // Render a tile depending upon the tile type
+        match tile {
+            TileType::Floor => {
+                ctx.set(x, y, RGB::from_f32(0.5, 0.5, 0.5), RGB::from_f32(0., 0., 0.), rltk::to_cp437('.'));
+            }
+            TileType::Wall => {
+                ctx.set(x, y, RGB::from_f32(0.0, 1.0, 0.0), RGB::from_f32(0., 0., 0.), rltk::to_cp437('#'));
+            }
+        }
+
+        // Move the coordinates
+        x += 1;
+        if x > 79 {
+            x = 0;
+            y += 1;
+        }
+    }
+}
 
 // Initialization of all systems
+// Runs every frame (tick)
 impl GameState for State {
     fn tick(&mut self, ctx : &mut Rltk) {
         ctx.cls();
 
         player_input(self, ctx);
         self.run_systems();
+
+        let map = self.ecs.fetch::<Vec<TileType>>();
+        draw_map(&map, ctx);
 
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
@@ -67,26 +140,8 @@ impl GameState for State {
     }
 }
 
-// NPC (entity) movement
-#[derive(Component)]
-struct LeftWalker {}
-
-impl<'a> System<'a> for LeftWalker {
-    type SystemData = (ReadStorage<'a, LeftMover>,
-                        WriteStorage<'a, Position>);
-
-    fn run(&mut self, (lefty, mut pos) : Self::SystemData) {
-        for (_lefty,pos) in (&lefty, &mut pos).join() {
-            pos.x -= 1;
-            if pos.x < 0 { pos.x = 79; }
-        }
-    }
-}
-
 impl State {
     fn run_systems(&mut self) {
-        let mut lw = LeftWalker{};
-        lw.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -102,8 +157,9 @@ fn main() -> rltk::BError {
     };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
-    gs.ecs.register::<LeftMover>();
     gs.ecs.register::<Player>();
+
+    gs.ecs.insert(new_map());
 
     // Creation of player
     gs.ecs
@@ -116,20 +172,6 @@ fn main() -> rltk::BError {
         })
         .with(Player{})
         .build();
-
-    // Creating of NPCs (entities)
-    for i in 0..10 {
-        gs.ecs
-        .create_entity()
-        .with(Position { x: i * 7, y: 20 })
-        .with(Renderable {
-            glyph: rltk::to_cp437('☼'),
-            fg: RGB::named(rltk::RED),
-            bg: RGB::named(rltk::BLACK),
-        })
-        .with(LeftMover{})
-        .build();
-    }
 
     rltk::main_loop(context, gs)
 }
