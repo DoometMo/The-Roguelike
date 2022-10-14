@@ -25,7 +25,7 @@ struct Player {}
 struct State {
     ecs: World
 }
-
+// Player movement
 fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();
     let mut players = ecs.write_storage::<Player>();
@@ -37,19 +37,20 @@ fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
 }
 
 fn player_input(gs: &mut State, ctx: &mut Rltk) {
-    // Player movement
+    // Player controls
     match ctx.key {
-        None => {} // Nothing happened
-        Some(key) => match key {
+        None => {} // If player presses nothing: do nothing
+        Some(key) => match key { // if player pushes something: do it
             VirtualKeyCode::Left => try_move_player(-1, 0, &mut gs.ecs),
             VirtualKeyCode::Right => try_move_player(1, 0, &mut gs.ecs),
             VirtualKeyCode::Up => try_move_player(0, -1, &mut gs.ecs),
             VirtualKeyCode::Down => try_move_player(0, 1, &mut gs.ecs),
-            _ => {}
+            _ => {} // if player doesnt press defined keys: do nothing
         },
     }
 }
 
+// Initialization of all systems
 impl GameState for State {
     fn tick(&mut self, ctx : &mut Rltk) {
         ctx.cls();
@@ -66,6 +67,7 @@ impl GameState for State {
     }
 }
 
+// NPC (entity) movement
 #[derive(Component)]
 struct LeftWalker {}
 
@@ -89,6 +91,7 @@ impl State {
     }
 }
 
+// Implementation of all systems
 fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
@@ -102,6 +105,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<LeftMover>();
     gs.ecs.register::<Player>();
 
+    // Creation of player
     gs.ecs
         .create_entity()
         .with(Position { x: 40, y: 25 })
@@ -113,6 +117,7 @@ fn main() -> rltk::BError {
         .with(Player{})
         .build();
 
+    // Creating of NPCs (entities)
     for i in 0..10 {
         gs.ecs
         .create_entity()
