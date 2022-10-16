@@ -15,8 +15,8 @@ pub struct Map {
     pub rooms : Vec<Rect>,
     pub width : i32,
     pub height : i32,
-    pub revealed_tiles : Vec<bool>,
-    pub visible_tiles : Vec<bool>
+    pub revealed_tiles : Vec<bool>, // memory of previously scene parts of map
+    pub visible_tiles : Vec<bool> // currently viewable tiles, once out of sight: remember the structure but not the details
 }
 
 impl Map {
@@ -110,6 +110,7 @@ impl Map {
 }
 
 impl BaseMap for Map {
+    // is_opaque returns 'true' if there is a wall and 'false' if its NOT
     fn is_opaque(&self, idx:usize) -> bool {
         self.tiles[idx] == TileType::Wall
     }
@@ -140,9 +141,10 @@ pub fn draw_map(ecs: &World, ctx : &mut Rltk) {
                 }
                 TileType::Wall => {
                     glyph = rltk::to_cp437('#');
-                    fg = RGB::from_f32(0., 1.0, 0.);
+                    fg = RGB::from_f32(0., 0.0, 1.);
                 }
             }
+            // sets previous seen areas to greyscale when no longer visible
             if !map.visible_tiles[idx] { fg = fg.to_greyscale() }
             ctx.set(x, y, fg, RGB::from_f32(0., 0., 0.), glyph);
         }

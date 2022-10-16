@@ -66,7 +66,7 @@ fn main() -> rltk::BError {
         .with(Position { x: player_x, y: player_y })
         .with(Renderable {
             glyph: rltk::to_cp437('@'),
-            fg: RGB::named(rltk::YELLOW),
+            fg: RGB::named(rltk::GHOST_WHITE),
             bg: RGB::named(rltk::BLACK),
         })
         .with(Player{})

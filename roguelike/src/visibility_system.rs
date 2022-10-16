@@ -19,9 +19,9 @@ impl<'a> System<'a> for VisibilitySystem {
                 viewshed.dirty = false;
                 viewshed.visible_tiles.clear();
                 viewshed.visible_tiles = field_of_view(Point::new(pos.x, pos.y), viewshed.range, &*map);
-                viewshed.visible_tiles.retain(|p| p.x >= 0 && p.x < map.width && p.y >= 0 && p.y < map.height );
+                viewshed.visible_tiles.retain(|p| p.x >= 0 && p.x < map.width && p.y >= 0 && p.y < map.height ); // retains what is scene within the map boundaries
 
-                // If this is the player, reveal what they can see
+                // If it is seen by the Player, reveal what is visible
                 let _p : Option<&Player> = player.get(ent);
                 if let Some(_p) = _p {
                     for t in map.visible_tiles.iter_mut() { *t = false };
