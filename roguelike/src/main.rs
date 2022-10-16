@@ -85,13 +85,14 @@ fn main() -> rltk::BError {
         .with(Position { x: player_x, y: player_y })
         .with(Renderable {
             glyph: rltk::to_cp437('@'),
-            fg: RGB::named(rltk::GHOST_WHITE),
+            fg: RGB::named(rltk::GHOSTWHITE),
             bg: RGB::named(rltk::BLACK),
         })
         .with(Player{})
         .with(Viewshed{ visible_tiles : Vec::new(), range: 8, dirty: true })
         .with(Name{name: "Player".to_string() })
         .build();
+ 
     // End of Player Spawner
     
     // Monster Spawner
@@ -121,6 +122,7 @@ fn main() -> rltk::BError {
     }   // End of Monster Spawner
 
     gs.ecs.insert(map);
+    gs.ecs.insert(Position { x: player_x, y: player_y }); 
     gs.ecs.insert(Point::new(player_x, player_y));
 
     rltk::main_loop(context, gs)
