@@ -121,8 +121,7 @@ fn main() -> rltk::BError {
             .build();
     }   // End of Monster Spawner
 
-    gs.ecs.insert(map);
-    gs.ecs.insert(Position { x: player_x, y: player_y }); 
+    gs.ecs.insert(map); 
     gs.ecs.insert(Point::new(player_x, player_y));
 
     rltk::main_loop(context, gs)
