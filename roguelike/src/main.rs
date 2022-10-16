@@ -143,14 +143,14 @@ fn main() -> rltk::BError {
         let roll = rng.roll_dice(1, 2);
         match roll {
             1 => { glyph = rltk::to_cp437('ó'); name = "Blob".to_string(); }
-            _ => { glyph = rltk::to_cp437('Ÿ'); name = "Mutant".to_string(); }
+            _ => { glyph = rltk::to_cp437('æ'); name = "Mutant".to_string(); }
         }
     
         gs.ecs.create_entity()
             .with(Position{ x, y })
             .with(Renderable{
                 glyph,
-                fg: RGB::named(rltk::RED),
+                fg: RGB::named(rltk::GREEN1),
                 bg: RGB::named(rltk::BLACK),
             })
             .with(Viewshed{ visible_tiles : Vec::new(), range: 8, dirty: true }) // Monster FOV
